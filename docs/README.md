@@ -1116,7 +1116,7 @@ At this point you should understand:
   - how to run a script file to execute its sentences
   - how to define a verb in a script file
   - how to define the monadic and dyadic cases of a verb
-  - the difference between =. and =:
+  - the difference between `=.` and `=:`
   - the difference between local and global
   - that a locale is a set of global names
   - that there can be more than one locale
