@@ -385,3 +385,747 @@ At this point you should understand:
 Check your understanding by doing the following exercises:
   - look up the definition of the monads `+: *: -: %:`
   - experiment with these new monads
+
+# Numeric constant
+You have seen the use of single numbers. It is also possible to have a list of numbers.
+```J
+   num =. 5
+   nums =. 23 0.5 12.5 7e6 _12 7
+```
+You'll do lots more with numeric lists, but for now we just want to establish that there is such a thing.
+
+# String
+Characters bracketed by quotes create a string.
+```J
+   char =. 'Q'
+   chars =. 'this is a list of characters' 
+```
+The quotes are not displayed when the string is displayed.
+```J
+   char
+Q
+   chars
+this is a list of characters
+```
+The quote starts and ends a string. A pair of quotes indicates that the quote character itself is in the string.
+```J
+   'put 2 ''s to get 1 '' in the string'
+put 2 's to get 1 ' in the string
+```
+An unmatched quote is an error.
+```J
+   abc =. 'asdf
+|open quote
+|   abc =. 'asdf
+|          ^
+```
+A string can be empty.
+```J
+   abc =. ''
+   ```
+A string is also referred to as a literal constant or as a character constant.
+
+# Word formation
+The monad `;:` can be useful in figuring out what the words are in a sentence. The word formation primitive takes a string as its right argument, splits it into words, and returns a result with each word in a box. For now, don't worry about what the boxes are, just note how visually helpful they are. You'll learn about boxes in later sections.
+```J
+   ;: '2 + 3'
++-----+
+|2|+|3|
++-----+
+   ;: '2.5 + 3e4'
++---+-+---+
+|2.5|+|3e4|
++---+-+---+
+   ;: 'a =. 1 2 3'
++-+--+-----+
+|a|=.|1 2 3|
++-+--+-----+
+   ;: 'test + 123 NB. this is a comment'
++----+-+---+---------------------+
+|test|+|123|NB. this is a comment|
++----+-+---+---------------------+
+   ;: 'def =. ''testing 1 2 3'''
++---+--+---------------+
+|def|=.|'testing 1 2 3'|
++---+--+---------------+
+```
+Note that the following are all J words and each goes in its own box:
+```J
+2.5
+3e4
+=.
+1 2 3
+test
+NB. this is a comment
+'testing 1 2 3'
+```
+It might surprise you that constants such as `1 2 3` and `'testing 1 2 3'` are J words. This is an important point and understanding it is necessary in reading and writing J sentences.
+
+If you are ever puzzled by a J sentence (it could happen), one of the things you can do is apply `;:` to it to be sure you know the words. You can then worry about the meanings of those words.
+
+Look up `;:` in the J Dictionary. The informal name for `;:` is word formation.
+
+# Space
+Spaces are not required to separate primitives from other words. On the other hand extra spaces don't change the meaning.
+```J
+   2+3
+5
+   2 + 3
+5
+   2    +    3
+5
+```
+Most examples in this book have spaces around all primitives. This makes the individual words stand out and allows you to concentrate on the meaning of the words without the additional problem of first figuring out what the words are.
+
+However, most J programmers, as they become more experienced, reach a point where they can easily read the words in a sentence, and the extra spaces become a nuisance and hindrance to understanding, rather than an aid. You will notice that in some of the later examples that some of these unnecessary spaces are left out.
+
+There are some cases where a space is essential.
+
+A space must separate names.
+```J
+   a=.3
+   plus=.+
+   a plus a
+6
+   aplusa
+|value error
+```
+The `.` (dot) and `:` (colon), used as inflections, change the word immediately in front of them into a new word. When used as a primitive or as the start of a primitive, they must have a space in front so that they are not treated as an inflection.
+```J
+   ;: 'a . b'	NB. 3 words
++-+-+-+
+|a|.|b|
++-+-+-+
+   ;: 'a .b'	NB. same 3 words
++-+-+-+
+|a|.|b|
++-+-+-+
+   ;: 'a. b'	NB. 2 words
++--+-+
+|a.|b|
++--+-+
+```
+A space must separate a `.` or `:` , that is not being used as an inflection, from the previous word.
+
+Numbers, for example 1e7, can contain letters. There are in fact several letters that can be used in spelling numbers in J. Letters that immediately follow a number are treated as part of the spelling of the number.
+```J
+   plus =. +
+   1plus 3
+|ill-formed number
+   1 plus 3
+4
+```
+A space must separate a number from a letter that is not a part of the number.
+
+# Precedence
+Math traditionally gives multiplication precedence over addition. In math class (or a skill testing question from a cereal box contest), if you were asked what 2 + 3 * 4 was, you would know the answer was 14.
+
+This is not too confusing if there are only a few functions and only a few levels of precedence (division | multiplication | addition and subtraction). But it gets awkward in languages such as C which have many functions and many levels of precedence.
+
+With the large number of verbs in J it would have been difficult to define the precedence, let alone trying to remember it when reading or writing. Moreover, being able to name things means you would also have to figure out what to do with the sentence:
+```J
+   2 plus 3 times 4
+```
+In a break with traditional math and in contrast to most other programming languages, J has no verb precedence. It will take you a little while to stop doing the multiplication first, but the overall simplification is worthwhile.
+
+Remember: there is no verb precedence.
+
+# Parentheses
+Math and most programming languages, including J, use parentheses to control the evaluation of a sentence. If a sentence is fully parenthesized then the order of evaluation is identical in most languages and is independent of verb precedence or any other rules.
+```J
+      2 + (3 * 4)
+14
+   (2 + 3) * 4
+20
+   10 - (4 - 3)
+9
+   (10 - 4) - 3
+3
+```
+There isn't any confusion about these answers.
+
+# Order of evaluation
+What is the answer if the parentheses are left out?
+```J
+   10 - 4 - 3
+9
+```
+J evaluates the sentence as:
+```J
+   10 - (4 - 3)
+9
+```
+Most other languages would evaluate it as:
+```J
+   (10 - 4) - 3
+3
+```
+In the absence of parentheses, J implicitly provides them from the right towards the left. Other languages provide them from the left towards the right. A longer sentence will make this visually clearer.
+```J
+   10 - 4 - 3 - 1
+8
+   10 - (4 - (3 - 1))	NB. J right-to-left
+8
+   ((10 - 4) - 3) - 1	NB. others left-to-right
+2
+```
+Now consider a sequence of monadic verbs.
+```J
+   - - - 4
+_4
+```
+Everyone knows how to parenthesize this, and every language does it the same.
+```J
+   - (- (- 4))
+_4
+```
+The grouping is done right-to-left and in this case the other languages agree with J. J always parenthesizes from right-to-left, whereas other languages have different rules for different situations.
+
+J has a right-to-left order of evaluation. Most other languages have a left-to-right order of evaluation for dyads, right-to-left for monads; and this is modified by the relative precedence of the verbs involved.
+
+With nouns and verbs the J evaluation rule from J Dictionary section E is:
+Execution proceeds from right to left, except that when a right parenthesis is encountered, the segment enclosed by it and its matching left parenthesis is executed, and its result replaces the entire segment and its enclosing parentheses.
+There are things in J, other than nouns and verbs, that you have not yet met that complicate this rule by adding a few more. It is these additional classes that largely justify the J break with tradition and adoption of a right-to-left evaluation.To further quote from the J Dictionary section E:
+One important consequence of these rules is that in an unparenthesized expression the right argument of any verb is the result of the entire phrase to its right.
+This is due to the lack of verb precedence as well as right-to-left evaluation.
+
+No verb precedence, right-to-left evaluation, and the rules for the other classes make the overall evaluation rules simple, reduce the need for parentheses, and make sentences easier for an experienced J user to read and write.
+
+Read the following sentences, evaluate them in your head, and understand how the no precedence and right-to-left rules explain the answer.
+```J
+    2 * 4 + 5
+18
+   2 + 4 * 5
+22
+   2 - 4 - 5
+3
+   8 % 2 + 2
+2
+```
+Remember: no verb precedence and right-to-left evaluation.
+
+# Verb definition
+The art of programming lies not so much in using the primitives, as in defining your own verbs, tailored to your requirements. In defining your own verbs you are extending the language to build an application that solves a particular set of problems.
+
+Let's assume that the problem is to convert temperatures between Fahrenheit and centigrade. You need to define a verb that does that.
+
+The following is a definition of the verb centigrade that will convert its argument from a Fahrenheit value to a centigrade value.
+```J
+   centigrade =. 3 : 0
+t1 =. y - 32
+t2 =. t1 * 5
+t3 =. t2 % 9
+)
+```
+At this point you want to do something that works, rather than deal with problems arising from typos, so transcribe it carefully.
+
+In the ijx window enter the first line:
+```J
+   centigrade =. 3 : 0
+```
+Type it exactly as shown. There must be a blank between the 3 and the : . The 3 indicates that you are defining a verb and the 0 indicates that the definition is in the subsequent input lines.
+
+After you enter the above line the caret is at the left margin and has not been indented the three spaces as it normally is. This indicates that the system is waiting for you to enter the rest of the definition.
+
+Type in the lines following the definition of centigrade as shown. They are at the left margin, and so look like they might have been displayed by the system, but in fact they are your entries of the lines required to define the verb.
+
+The final line that contains just the ) ends this special definition input mode. After you enter this final line, the system again indents the three spaces indicating that it is ready to execute a sentence.
+
+If you entered the definition correctly, you should be able to experiment with your new verb.
+```J
+   centigrade 32	
+0
+   centigrade _40
+_40
+   centigrade 212
+100
+```
+Let's look at the definition to understand how it works. The y in the first sentence of the definition is the name of the argument of the verb. When you execute the verb with an argument the first line will subtract 32 from the argument and define t1. When the first line is finished, execution proceeds to the next line, which defines t2 as the result of t1 times 5. Execution proceeds to the next line and defines t3 as t2 divided by 9. There are no more lines, so the execution of the verb is finished. The result of the verb is the last result that was evaluated.
+
+We used `3 : 0` to define the verb. The phrase verb define is equivalent and some find it easier to read. However, it hides information and we will use the `3 : 0` form.
+```J
+   centrigrade =. verb define
+. . .
+)
+```
+
+# Monad and dyad definition
+As discussed in the earlier section on ambivalence, all verbs had two definitions, a monad and a dyad. You have defined only a monad for centigrade. What about the dyad?
+```J
+   23 centigrade 32
+|domain error
+|   23     centigrade 32
+```
+Since you didn't provide a dyad definition, it is empty and this is treated as if the dyad had no arguments in its domain, and any arguments you give will cause a domain error.
+
+Let's examine some simple examples of defining dyadic, monadic, and both cases.
+```J
+   monadminus =. 3 : 0
+- y
+)
+   monadminus 5
+_5
+   5 monadminus 3
+|domain error
+|   5     monadminus 3
+```
+The above defines the monad of the verb named monadminus. Applying it monadically works and applying it dyadically fails.
+
+In one-line definitions like this you can take a shortcut and make the definition on a single line and avoid entering the special input mode that needs to be ended with the `)`. The following is an equivalent way of doing the above definition:
+```J
+   monadminus =. 3 : '- y'
+```
+The string contains the single line that makes up the definition. It is provided directly as the right argument of : instead of the 0 used earlier.
+
+So far you have defined just the monadic case of a verb. You can also define a verb with just a dyadic definition. Instead of 3 as the left argument to `:` use a 4 to define the dyadic case.
+```J
+   dyadminus =. 4 : 'x - y'
+   5 dyadminus 3
+2
+   dyadminus 5
+|domain error
+|       dyadminus 5
+```
+In the monad case the `y` name is the right argument and in the dyad case x is the left argument and `y` is the right.
+
+What if you want to define both cases of a verb?
+```J
+   minus =. 3 : 0
+- y
+:
+x - y
+)
+```
+The `:` by itself on a line separates the monad and dyad definitions.
+```J
+   3 minus 5
+_2
+   5 minus 3
+2
+   minus 5
+_5
+```
+
+# Script file
+When you close J you lose the definitions of all the names. What you execute in the ijx window affects the current session, but is not permanent. This is fine when experimenting, but when you start defining things like your centigrade verb you want to record the definition so that you can use it in another session.
+
+Close J and restart it.
+```J
+   centigrade
+|value error
+```
+You have a clean slate. The definition of centigrade, and all the other names you defined, in the previous session are lost.
+
+At least the primitives are still there!
+```J
+   2 + 5
+7
+```
+As you would expect, to maintain a permanent record of your definitions, you save them in files. Files with J sentences and definitions are called script files and you can edit them just as you would edit any other text file. Script files typically have a suffix of .ijs.
+
+Remember: a script file is a source file for definitions.
+
+Although you can use any text editor to work with script files, the J system provides a simple editor that is integrated in ways that make it convenient.
+
+The **File|New ijs** menu command creates a new script file and a window for editing it. Do this now and you will see that your J session has both an ijx window and a new ijs window.
+
+The ijs window is an edit window on the file with the name in its titlebar. Enter in an ijs window does not execute the line, it just moves to the start of a new line.
+
+Type your centigrade definition into the ijs window.
+```J
+centigrade =: 3 : 0
+t1 =. y - 32
+t2 =. t1 * 5
+t3 =. t2 % 9
+)
+```
+**Be sure to use `=:` instead of `=.` in the first line**. The `=:` makes a global definition. If you use `=.` it is a local definition. This important difference is explained shortly.
+
+So far you have just edited changes into the window. The file has not been changed and the verb is still not defined. You have to run the script in order to execute the sentences.
+
+Do menu command **Run|Window** in the ijs window to save the changes to the file and then execute each of the sentences in the file. This is similar to your typing the contents of the file into the ijx window, except the sentences and results are not displayed. The only display in the ijx window is the system generated sentence that causes the file sentences to be executed. This sentence will be something like:
+```J
+   load'c:\j601\temp\1.ijs'
+```
+If an error is reported (output in the ijx window with a vertical bar on the left) then you have a typo in your script. Correct the text in the ijs window and run it again.
+
+The sentences in the script file have been executed and centigrade is now defined. In the ijx window try using centigrade.
+```J
+   centigrade 32
+0
+```
+The file created with **File|New** ijs is in the J temp directory and has a temporary format name (a number with an ijs suffix). If you close J now, it will ask if you want to delete that temporary file. If you replied no, you could restart and open that temporary file and run it to define centigrade. However, it would be better to resave it now with a more appropriate name in the J user directory. Use **File|Save As...**, go up one directory level and then to the the user directory, and set the file name as cf.ijs. The file name in the ijs window titlebar will change to the new name.
+
+Close the cf.ijs window and erase your centigrade definition. You erase the definition of a name by using the utility verb erase with an argument that is the string of the name you want to erase. The result of 1 indicates the erase was successful.
+```J
+   erase 'centigrade'
+1
+   centigrade 212
+|value error
+|       centigrade 212
+```
+Use **File|Open** to open the cf.ijs window and use **Run|Window** to run the script to define centigrade.
+```J
+   centigrade 212
+100
+```
+Let's add a definition for fahrenheit to the cf.ijs window. Type in the following after your centigrade definition. Again, be sure to use `=:` .
+```J
+fahrenheit =: 3 : 0
+t1 =. y * 9
+t2 =. t1 % 5
+t3 =. t2 + 32
+)
+```
+Use **Run|Window** to run the sentences in the cf.ijs script. Because these are the first changes to a permanent (non-temporary) file you are prompted to see if you want to save the changes to file. Reply yes, and then test your new verb.
+```J
+   fahrenheit 0
+32
+   fahrenheit 451
+843.8
+```
+Close J and restart it.
+```J
+   centigrade
+|value error
+   fahrenheit
+|value error
+```
+You can run the sentences in the cf.ijs file without opening the file for editing. Use **Run|File** and select your cf.ijs file. A line similar to
+```J
+   load'c:\j601\user\cf.ijs'
+```
+appears in the ijx window to run the sentences in the file and your verbs are now defined.
+```J
+   centigrade 32
+0
+   fahrenheit 100
+212
+```
+The line that starts with load that appears in the ijx window is in fact the sentence that causes the sentences in the file to be executed. The menu command is just a short cut way of executing this sentence. The string is the full path name to the file to run. You can shorten this full path name to a relative path name when you type it manually.
+
+To check this, close J, restart it, and verify that centigrade is undefined. In the ijx window execute the following sentence.
+```J
+   load'user\cf.ijs'
+```
+Now check that your verbs are defined.
+
+Use **File|Open** to open your cf.ijs file for editing.
+
+What if there is an error in the script? Let's add an intentional error to the script to see what happens. Add the line `foo 123` at the end of the script and run the script again.
+```J
+   load'c:\j601\user\cf.ijs'
+|value error
+|       foo 123
+|[-13]
+```
+An error is reported and the execution of the sentences in the script stops. The number at the end of the error report is the line number in the script that had the error.
+
+Remove the error from the script and run it again.
+
+# Local
+The verb centigrade uses names `t1`, `t2`, and `t3` in its definition, but if you refer to them outside the verb they are not defined.
+```J
+   centigrade 32
+0
+   t1
+|value error
+   t1 =. 123
+   t1
+123
+   centigrade 212
+100
+   t1
+123
+```
+The use of `t1` inside the definition of centigrade has not conflicted with your use of `t1` outside the definition. The verb centigrade does not define a `t1` outside of itself, as indicated by the value error, and setting a value into its `t1` does not change the value of `t1` outside the definition.
+
+The `t1` used inside centigrade is a local name. A local name exists only inside the verb. The `t1` used outside centigrade is a global name. A name defined in the execution of a verb with the copula `=.` is a local name.
+
+# Global
+A name defined outside the execution of a verb is a global name.
+
+In the previous section, the `t1` defined in the ijx window is a global name that is completely different from the `t1` defined inside the verb centigrade.
+
+Let's try some experiments. Create a temporary script file with **File|New ijs** and type into it the definition:
+```J
+fooa =: 3 : 0   NB. =: is important
+zzz + y
+)
+```
+Run the script with **Run|Window**. In the ijx window:
+```J
+   fooa 5
+|value error
+|       zzz+y
+```
+Let's define the global `zzz` to see what happens. Defining it outside a verb means it is a global. In the ijx window:
+```J
+   zzz =. 23	NB. define global zzz
+   fooa 5
+28
+```
+The verb fooa uses the global `zzz`. So, a verb can use globals.
+
+Edit the script to add foob and then run the script.
+```J
+foob =: 3 : 0
+zzz =. 7
+zzz + y
+)
+```
+In the ijx window:
+```J
+   foob 3
+10
+   zzz
+23
+```
+The verb foob uses its local `zzz` and ignores the global. So, a verb can use locals and ignore globals of the same name.
+
+Inside a verb the copula `=.` defines a local name. Once a name is defined as a local, references to that name are to the local name.
+
+What if you wanted to define a global name? The global copula `=:` (`=` with a colon inflection) defines a global name. Edit the script to add fooc and then run the script.
+```J
+fooc =: 3 : 0
+gw =: y
+lz =. y
+)
+```
+In the ijx window:
+```J
+   fooc 3
+3
+   gw
+3
+   lz
+|value error
+   gw =. 24
+   fooc 5
+5
+   gw
+5
+```
+Defining gw with `=:` defines the global name.
+
+In general, it is good practice to only define locals in a verb and to not define globals. This is an important part of what is sometimes called a functional style of programming. Verbs that define globals are said to have side effects and are more likely to cause bugs and make it harder to read the application to understand what is happening.
+
+It is possible to define a verb that uses both the global and local definitions of a name and this is VERY bad practice.
+
+# Debug global
+Sometimes when trying to debug or better understand a verb it is useful to see the values of its local names or other intermediate results. A quick way of doing this is to add a line to the verb definition that does a global definition.
+
+Open the cf.ijs file and add a line to centigrade to define global `gt1` as `t1`.
+```J
+centigrade =: 3 : 0   NB. =:
+t1 =. y - 32
+gt1 =: t1             NB. temp line for debugging info
+t2 =. t1 * 5
+t3 =. t2 % 9
+)
+```
+Run the script and in the ijx window:
+```J
+   centigrade 124
+51.1111
+   t1
+|value error
+   gt1
+92
+```
+After centigrade finished execution you can't see what value the local `t1` had, but you can see a copy of the value in `gt1`.
+
+Remove the line from the script and run the script to redefine centigrade without the debug line.
+
+# When =. and =: are the same
+You have seen how `=.` and `=:` are different when used in a verb definition.
+
+When you execute sentences in the ijx window you are not executing them inside a verb so the `=.` and `=:` have the same effect. In the ijx window:
+```J
+   a =. 123
+   a
+123
+   a =: 234
+   a
+234
+```
+In the ijx window the `=.` and `=:` copulas are the same and it doesn't matter which you use to define a name as they both define the global name. The `=.` is easier to type and tends to be the one that is used. In a strict sense it would be better to explicitly use `=:` when defining a global name.
+
+# When they aren't
+You have seen that `=.` and `=:` in the ijx window are the same. And you have seen that inside a verb they are different. It is important to realize there is also a difference in scripts.
+
+When you run a script, the load sentence is executed in the ijx window and the verb load executes the sentences in the script. So, the sentences in the script are executed in the load verb. This means that names defined with `=.` are defined as locals of the verb load. If you want to define a global in the script you must use `=:` . This is why the lines which define globals such as centigrade and fahrenheit in your script cf.ijs must use `=:` . If you used `=.` , they would be local to load and would disappear as soon as load finished execution.
+
+Always think about whether a definition is global or local and use `=:` and `=.` accordingly.
+
+# Locale
+First of all, note that locale is a very different word from local, even though there is only one less letter in the latter.
+
+A locale is a set of global names. There can be several locales, so there can be several sets of globals.
+
+A global name in a locale is distinguished from the same name in other locales by qualifying the name with the addition of the locale name bracketed by `_` (underbar) characters. A name qualified by a locale is always a global name.
+```J
+   abc_def_ =: 2
+```
+The above sentence can be read as global abc in locale `def` is `2`.
+```J
+   abc_base_ =: 4
+```
+The above sentence can be read as global `abc` in locale base is 4.
+
+If the locale name is elided, it is assumed to be base.
+```J
+   abc__   NB. the same as abc_base_
+4
+```
+If a global name is not qualified with a locale name, then it is in the current locale. The base locale is the current locale unless it has been explicitly changed by executing a verb in a different locale. The following defines `abc` in the base locale:
+```J
+   abc =. 6
+   abc_base_
+6
+   abc
+6
+```
+Since the base locale is the current locale, the names `abc` and `abc_base_` are the same.
+
+The name `abc_def_` is clearly different from `abc`, but so far there is no way of telling that anything special is going on. In what sense are `abc` and `foo` in the same (base) locale? And `abc` and `abc_def_` in different locales?
+
+One way of distinguishing is to use the names utility verb that lists global names.
+```J
+   a =. 23
+   b =. 24
+   a_q_ =. 25
+   w_q_ =. 26
+   names 0	NB. 0 lists nouns
+a abc b
+```
+Your names result may be different, but it will include all global nouns you have defined in the base locale. You should see the `a` and `b` that you defined above and note that you do not see the `w` that was defined in locale `q`.
+
+To see the names defined in locale `q` you can do the following:
+```J
+   names_q_ 0	NB. names in locale q
+a w
+```
+Nouns `a` and `w` are defined in the `q` locale.
+
+Locales partition global names into different sets, and utilities, such as names, can work with globals in a particular locale.
+
+The real power of locales comes into play with verbs defined in a locale. When a verb executes in a locale it executes with that locale, not the base locale, as the current locale.
+
+Let's define a simple verb in the `q` locale to see how this works.
+```J
+   f_q_ =. 3 : 'a =: y'
+```
+This verb defines global a with its right argument. There can be many different locales, each with their own global `a`. But when `f_q_` executes, it executes in the `q` locale and the `q` locale is the current local, and global names it uses are from the `q` locale. Try the following experiments:
+```J
+   a =. 23	NB. define a in the base locale
+   a_q_ =. 24	NB. define a in locale q
+   f_q_ 100	NB. execute f in locale q
+100
+   a
+23
+   a_q_
+100
+```
+Executing `f_q_` 100 defined global `a_q_` as 100. It did not affect the global `a` in the base locale.
+
+If a verb explicitly references a name in a locale then that is the global that is affected. For example, define verb `g_q_` that defines a in the base locale. You will see that the `a` in the base locale is defined and the `a` in the `q` locale is not changed:
+```J
+   g_q_ =. 3 : 'a_base_ =: y'	NB. explicit locale name
+   g_q_ 200
+200
+   a
+200
+   a__
+200
+   a_q_
+100
+```
+Locales partition global names into separate sets. In particular, related nouns and verbs, say in a set of utilities, can be defined in their own locale. Their names don't conflict with names in the base or other locales. When you look at your application you can look at just the related globals that are in a particular locale. When a verb runs in a locale it uses globals from that same locale.
+
+The names verb with an argument of 0 lists nouns, with 3 it lists verbs, and with 6 it lists locale names.
+```J
+   names_q_ 0
+a w
+   names_q_ 3	NB. verbs
+f g
+   names 6	NB. locale names
+base j q z
+```
+The list of locale names is interesting. `base` and `q` you know about, but what about `j` and `z` ?
+
+The globals in the `j` and `z` locales are defined when J starts up and runs the profile.ijs script. The j locale contains things which are useful in building an application and is discussed in the J Online Documentation.
+
+The `z` locale is very interesting indeed.
+
+# z locale
+The `z` locale is the parent locale of all other locales.
+
+If a name is not found in the current locale, and there is a definition for it in the `z` locale, then that definition is used as if it were in the current locale.
+
+The `z` locale is for common utilities that you want to be available everywhere. From the `z` locale, they are available for execution in any locale as if they were in that locale, yet there is only a single copy, and the names in the z locale don't clutter up the names in the other locales.
+
+The profile.ijs that runs when you start J defines many standard utilities in the `z` locale. You have used both the erase and the names verbs which are defined in the `z` locale. You can tell this by the following:
+```J
+   names 3	NB. verbs in the base locale
+...
+```
+The above does not list names as a name, yet you are able to execute it. This is because when it is not found in the base locale, its definition from the `z` locale is used as if it were in fact defined in the base locale.
+```J
+   names_z_ 3	NB. verbs in z locale
+...
+```
+The result is too long to list here. The verb names has a dyadic definition that takes a left argument which indicates the first letter of names to return.
+```J
+    'n' names_z_ 3
+nameclass namelist names nc nl ...
+```
+# Script load
+In addition to the utilities loaded with the standard profile, there are several additional scripts of standard utilities provided with the system. These standard utilities are documented in the J Online Documentation available from the J help menu. You could run these scripts directly, but you would need to remember the path to the script, as well as which locale to run them in. The standard profile provides utilities to make this easier for you. The scripts verb lists scripts that can be loaded with the load verb.
+```J
+   scripts ''
+. . .
+.... parts    plot     profile  scripts  stdlib ...
+. . .
+```
+The scripts verb with an argument of 'v' lists the scripts with their full path.
+```J
+   scripts 'v'
+. . .
+compare  ~system\main\compare.ijs
+ . . 
+```
+The ~system indicates the J system directory.
+
+The convert script contains several conversion utilities.
+```J
+   load 'convert'
+   toupper 'testing 1 2 3'
+TESTING 1 2 3
+   tolower 'Sir Richard'
+sir richard
+```
+
+# Checkpoint B
+At this point you should understand:
+
+  - a text file that is a source of sentences is called a script file
+  - a script file defines global names
+  - how to create a new temporary script file
+  - how to save a temporary script file as a permanent file
+  - how to run a script file to execute its sentences
+  - how to define a verb in a script file
+  - how to define the monadic and dyadic cases of a verb
+  - the difference between =. and =:
+  - the difference between local and global
+  - that a locale is a set of global names
+  - that there can be more than one locale
+  - that the base locale is the one you normally work with
+
+Check your understanding by doing the following exercises:
+
+  - create a new temporary script file
+  - in the script define square as a monad that uses *: to square its argument
+  - save the script in the user directory with the name square.ijs
+  - run the script and test the verb square
+  - close J, restart, use Run|File to run user\square.ijs and test it
