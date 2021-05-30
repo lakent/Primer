@@ -1129,3 +1129,241 @@ Check your understanding by doing the following exercises:
   - save the script in the user directory with the name square.ijs
   - run the script and test the verb square
   - close J, restart, use Run|File to run user\square.ijs and test it
+
+# Debug - stepping through a verb
+In an earlier section you added a debugging line to a verb definition that allowed you to see the results of intermediate steps when the verb was run. Sometimes you need more powerful tools than that.
+
+Use `load` to load the debug utilities.
+```J
+   load 'debug'
+```
+Open your script file cf.ijs and run it.
+
+Let's execute `centigrade`, but with a stop on each line so that you can take a look at exactly what is going on.
+```J
+   dbss 'centigrade *:*'
+```
+The dbss (Set Stop) argument requests a stop before executing all, indicated by `*:*`, lines in `centigrade`.
+```J
+   dbr 1
+```
+`dbr` with an argument of 1 requests that the system suspend execution when an error or stop occurs. When a verb is suspended it is halted in mid execution. You can examine definitions, change definitions, and you can resume execution of the suspended verb.
+```J
+   centigrade 212
+|stop
+|       t1=.y-32
+|centigrade[0]
+```
+The error report (bars at the left margin) indicates execution stopped on line 0 of `centigrade` and shows the sentence from that line.
+
+The execution of `centigrade` is suspended and the indent of six spaces, rather than three, indicates the suspension. The variable y is the argument.
+```J
+      y
+212
+```
+The stop occurs before the line is executed, so `t1` has not been defined and if you try to look at it you will get a value error.
+
+Use `dbrun` to continue execution. It will run the current line, and because stops are set on all lines it will then stop on the next line.
+```J
+      dbrun ''
+|stop
+|       t2=.t1*5
+|centigrade[1]
+      t1
+180
+      t1*5
+900
+```
+`centigrade` is now stopped on line 1, and as you can see, you are able to check the value of local t1 that was defined in line 0. Step through the next lines and examine locals.
+```J
+      dbrun ''
+|stop
+|       t3=.t2%9
+|centigrade[2]
+      t2
+900
+      t2%9
+100
+      dbrun ''
+100
+```
+You are no longer suspended in `centigrade` and you are back to the normal indent of three spaces.
+
+Turn off the request for debug suspensions and reset to have no stops.
+```J
+   dbr 0
+   dbss ''
+```
+
+# Debug - an error
+Let's introduce an error into your `centigrade` verb to see how that looks and how you would find and fix it.
+
+Open your cf.ijs script and edit the first line to have an error by adding quotes around the expression to the right of the copula.
+```J
+t1 =. 'y - 32'
+```
+Instead of t1 being defined as the result of `y - 32` , it will be defined as the string.
+
+Run the script to make the new definition. Turn off debug suspension and request no stops and then run your buggy `centigrade`. Be sure to load the debug utilities if they are not already loaded.
+```J
+   dbr 0	NB. disable suspension
+   dbss ''
+   centigrade 212
+|domain error
+|   t2=.t1    *5
+```
+You are executing with suspension disabled (`dbr 0`) so execution did not suspend in centigrade and you have the normal 3 space indent.
+
+If you look at the line in error it is clear that the 5 is a valid argument to times, so there must be something wrong with `t1`. But you don't know the value of `t1`. You could stare at the source for the error, but, in a complex situation, it might be quicker to use debug.
+
+Enable suspension and rerun.
+```J
+   dbr 1	NB. enable suspension
+   centigrade 212
+|domain error
+|   t2=.t1    *5
+|centigrade[1]
+```
+There is a 6 space indent indicating suspension, and because `centigrade` is suspended you can look at the value of t1.
+```J
+      t1
+y - 32
+```
+From the display of t1 it is clear that it is a string, not the number from the desired calculation. You can now look at the source to see where `t1` was defined and see that the quotes should not be there.
+
+Edit the source to fix the definition by removing the quotes and run the script to redefine `centigrade`.
+
+You want to run line 0 again to properly define `t1`. You can do this by using `dbjmp` to continue execution at line 0.
+```J
+      dbjmp 0
+100
+```
+Since no stops are set and there are no other errors, line 0 of `centigrade` is executed, which sets a proper value into local `t1` and execution continues until finished.
+
+# Comparative
+The dyad = has a result of 1 if its left and right argument are equal, and a result of 0 if they are different.
+```J
+   23 = 34
+0
+   23 = 23
+1
+   a =. 'd'
+   a = 'c'
+0
+   7 + a = 'c'
+7
+   7 + a = 'd'
+8
+```
+Some programming languages treat the results of comparative primitives such as = as True and False values that are not numbers. In J the results of comparatives are just numbers.
+
+There are several other comparative verbs: less-than `<` , less-or-equal `<:` , larger-than `>` , and larger-or-equal `>:` . These comparative primitives are sometimes called relationals.
+```J
+   7 < 8
+1
+   7 < 7
+0
+   7 <: 7
+1
+```
+
+# Control structure
+In centigrade the sentences in the definition are just executed sequentially, one after the other. To conditionally control which sentences are executed you use control structures.
+
+Control structures are built with control words and sentences. The following is an example of a control structure:
+```J
+if. x = 'c'
+ do. centigrade y
+ else. fahrenheit y
+end. 
+```
+The `if.` control word starts the control structure and the end. control word ends it. The result of the `x = 'c'` sentence is the test result and it determines which of the other sentences in the control structure are executed. If the test result is 1, then the sentence after the `do`. control word is executed. If the test result is any other value then the sentence after the `else`. control word is executed. In English: if the left argument equals the letter c, then execute `centigrade`, otherwise execute `fahrenheit`.
+
+Use this capability to add a new verb to your cf.ijs script that will convert a number from Fahrenheit to centigrade or from centigrade to Fahrenheit depending on the value of the left argument. Open your cf.ijs script and add the following definition at the end.
+```J
+NB. convert f to c if x is 'c', otherwise c to f
+convert =: dyad : 0
+if. x = 'c'
+ do. centigrade y
+ else. fahrenheit y
+end.
+)
+```
+This defines the dyadic case of the verb. The dyad has a left argument with the name x and a right argument with the name `y` . The verb `convert` takes a left argument of `'c'` to convert a Fahrenheit value to centigrade. Any left argument other than `'c'` will convert a centigrade value to Fahrenheit.
+
+Note that you use your verbs `fahrenheit` and `centigrade` just as you would use primitive verbs.
+
+Run the script and test convert.
+```J
+   'c' convert  212
+100
+   'f' convert 100
+212
+```
+Normally a sentence is a line in a script. However, with control words separating a line into several sentences it is possible to have more than one sentence on a line.
+
+The following line is equivalent to the multiple lines used earlier.
+```J
+if. x = 'c' do. centigrade y else. fahrenheit y end.
+```
+Control structures are only allowed in definitions and you cannot type one directly into the ijx window for execution.
+
+There are nine control structure patterns:
+```J
+if. T do. B end.
+if. T do. B else. B1 end.
+if. T do. B elseif. T1 do. B1 elseif. T2 do. B2 end.
+try. B catch. B1 end.
+while. T do. B end.
+whilst. T do. B end.
+for. T do. B end.
+for_i. T do. B end.
+select. T
+ case. T0 do. B0
+ case. T1 do. B1
+ fcase.T2 do. B2
+ case. T3 do. B3
+end.
+```
+A control structure starts with `if.` , `try.` , `while.` , `whilst` , `for.` , `for_i.` , or `select.` and ends with a matching end. .
+
+Words beginning with T or B denote a block of 0 or more sentences and can contain nested control structures.
+
+The result of the last sentence in a T block determines which block is executed next and whether execution in the control structure is finished.
+
+Often the T block is a single sentence that makes a simple test like the one in the example.
+
+The `try.` control structure is an interesting one. It executes the B block of sentences, and if there are no errors it skips to the end of the structure. However, if there is an error, then the B1 block is executed.
+
+The `while.` control structure executes the T block and if its result is not 0 then it executes the B block and continues this until the T block has a 0 result. If the T block is 0 the first time, then the B block is not executed.
+
+The whilst. control structure is the same as while. except that the T block is skipped the first time. This means that the B block is always executed at least once.
+
+In the for. structure, the B block is evaluated once for each item of the array A that results from evaluating the T block. In the for_i. form, the local name i is set to the value of an item on each evaluation of the B block and i_index is set to the index of the item. A break. goes to the end of the for. control structure, and continue. goes to the evaluation of B for the next item.
+
+In the select. structure, the result R of T is compared to the elements of the result Ri of Ti , and the Bi block of the first case. or fcase. with a match is evaluated. Evaluation of the select. control structure then terminates for a case. , or continues with the next B(i+1) block for an fcase. (and further continues if it is an fcase.).
+
+See the J Dictionary for more information on control structures.
+
+# Checkpoint C
+At this point you should understand:
+
+  - that load `'debug'` loads debug utilities
+  - the general idea of verb debugging
+  - how control words create control structures by grouping sentences into blocks
+  - what the T block test result is
+  - how the test result determines which B block to execute
+  - how the test result determines when control structure execution is finished
+Check your understanding by doing the following exercises:
+
+  - debug step through your convert verb
+  - create a temporary script file and define a verb called `conv` that is similar to `convert`, but insists on a `'f'` argument to do the conversion to Fahrenheit and gives a string result indicating there was an error if the left argument is neither `'c'` nor `'f'`. Hint: use the control structure sketched out here:
+    ```J
+    if. x = 'c' do. ...
+      elseif. x = 'f' do. ...
+      elseif. 1 do. 'left arg not c or f'
+    end.
+    ```
+    or try a `select.` structure.
+
+  - create a temporary script file and define a dyad called plus that adds its left argument to its right. But, if there is an error, it should give a string result. Hints: use dyad `: 0; 4 plus 9` should return 13; `'a' plus 9` should return your error string (perhaps, `'there was an error'`); use a `try.` control structure to catch the error and give the string result.

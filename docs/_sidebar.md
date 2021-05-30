@@ -42,3 +42,8 @@
 - [z locale](#z-locale)
 - [Script load](#script-load)
 - [Checkpoint B](#checkpoint-b)
+- [Debug - stepping through a verb](#debug---stepping-through-a-verb)
+- [Debug - an error](#debug---an-error)
+- [Comparative](#comparative)
+- [Control structure](#control-structure)
+- [Checkpoint C](#checkpoint-c)
