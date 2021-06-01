@@ -37,7 +37,7 @@
 - [Global](#global)
 - [Debug global](#debug-global)
 - [When =. and =: are the same](#when-and-are-the-same)
-- [When they aren't](#when-they-aren-t)
+- [When they aren't](#when-they-aren39t)
 - [Locale](#locale)
 - [z locale](#z-locale)
 - [Script load](#script-load)
