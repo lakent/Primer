@@ -1367,3 +1367,472 @@ Check your understanding by doing the following exercises:
     or try a `select.` structure.
 
   - create a temporary script file and define a dyad called plus that adds its left argument to its right. But, if there is an error, it should give a string result. Hints: use dyad `: 0; 4 plus 9` should return 13; `'a' plus 9` should return your error string (perhaps, `'there was an error'`); use a `try.` control structure to catch the error and give the string result.
+
+# Basic way of adding lists
+You can have lists of numbers.
+```J
+   a =. 12 24 47
+   b =. 12 34 45
+```
+If you wanted to add two lists of numbers in a language like Basic you would have to get each number in turn from each list, add them together, and then stick this new result at the end of the result list.
+
+To add two lists of numbers together in this way you need a few new primitives. You need a way to get one number from a list. The verb { (from) can do this.
+```J
+   0 { 7 9 2 4	NB. index 0 value 
+7
+   1 { 7 9 2 4	NB. index 1 
+9
+   2 { 7 9 2 4	NB. index 2 
+2
+   3 { 7 9 2 4	NB. index 3
+4
+```
+You need to be able to append a new result value to the result list. The verb `,` can do this.
+```
+   7 9 2 , 4	NB. append 4 to the list
+7 9 2 4
+   7 9 2 4 , 7	NB. append 7 to the list
+7 9 2 4 7
+   a =. 7 9 2 4
+   a =. a , 23
+   a
+7 9 2 4 23
+```
+You need to know how many numbers there are in the list so that you will know when you are done. The monad `#` (tally) tells us how many numbers are in the list.
+```J
+   # 7 9 2 4
+4
+   # 7 9 2 4 7
+5
+```
+You also need a way to create an empty result to which you will add each new result. An empty string will do this.
+```J
+   r =. '' 	  NB. an empty string
+```
+With these new verbs, combined with what you already know, you can write a Basic or Java style program that adds two lists.
+
+Create a temporary script file and add the addlists definition.
+```J
+addlists =: dyad : 0
+r =. ''
+count =. # x
+i =. 0
+while. i < count do.
+ left =. i { x
+ right =. i { y
+ sum =. left + right
+ r =. r , sum
+ i =. i + 1
+end.
+r
+)
+```
+The local i is the index to select numbers from each list. It starts with 0 to select the first number from the left and right arguments. At the end of the `while.` control structure the i is incremented by 1 so that the next time the block is executed it will select the next number. The `while.` structure tests to see if i is less than the count of the argument. The control structure is finished when i is equal to the count of numbers to be added together. The `left` and `right` locals are defined as the next pair of numbers. They are added together and are appended to the end of the result `r`. The final line in the definition is `r` and that is the result.
+
+Run the script and test your definition of addlists.
+```J
+   2 3 4 addlists 4 5 6
+6 8 10
+```
+If you made a typo in the definition you will get an error or a wrong answer. In that case, you should check carefully that you have typed the definition in correctly.
+
+Certain errors (such as omitting the line that incremented the value of i) give you a `while.` that runs forever. This is because the `while.` never ends and the program keeps adding the first element of the left and right arguments and never steps to the next element. If you are in a loop like this, you need to run the jbreak program to interrupt J execution. This is the yellow J icon in Windows and jbreak shell script in Unix.
+
+In fact, it is worthwhile seeing how this looks. First be sure you know how to run the jbreak program to signal the interrupt (in Windows: find the yellow J icon, and in Unix have a command window ready to run the jbreak shell script in the J directory). Running jbreak while J is idle doesn't do anything. Edit the `addlists` definition so that i is not incremented. The easiest way to do this is to add `NB.` in front of the `i =. i + 1` sentence. Run the script and test the verb. This will run until to use jbreak to interrupt execution (or cancel the J task).
+
+For such a simple thing, this definition seems overly verbose in taking eleven lines. The definition can be compacted a bit by combining sentences. In the temporary script file create a second version of the definition.
+```J
+adda =: dyad : 0
+r =. ''
+count =. # x
+i =. 0
+while. i < count do.
+ r =. r , (i { x) + (i { y)
+ i =. i + 1
+end.
+r
+)
+```
+Run the script and test this new version.
+```J
+   2 3 4 adda 4 5 6
+6 8 10
+```
+This is essentially how programmers in most languages add two lists of numbers. The program could be further streamlined, but it would still have to be a control structure that dealt with each number, one at a time. Most languages only know how to add a single number to a single number, and to add lists of numbers, you need to write a control structure that loops and explicitly adds each element of the list in turn.
+
+# J way of adding lists
+J knows how to do things to single numbers, but it also knows how to do things with lists.
+
+Since J knows how to add lists, you can write a third, simpler version of the definition.
+```J
+addb =: 4 : 'x + y'
+```
+Add this definition to your temporary script file, run the script, and test it.
+```J
+   2 3 4 addb 4 5 6
+6 8 10
+```
+At this point you probably realize that `addb` is so simple as to be unnecessary.
+```J
+   2 3 4 + 4 5 6
+6 8 10
+```
+In J you can just add the lists of numbers because the `+` verb knows all about lists of numbers.
+
+Years of research and thought have gone into how J verbs work with lists. For example, if you wanted to add 1 to each number in a list.
+```J
+   1 adda 2 3 4
+3
+```
+The Basic style `adda` verb gives an answer, but it is the wrong answer. What happens is that the `while.` uses the count of the left argument (which is 1) to determine how many elements to generate in the result, and so calculates only the first result number.
+```J
+   2 3 4 adda 1
+|index error
+|   r=.r,(i{x.)+(i    {y.)
+```
+This gives an error because the `while.` uses a count of 3 (the count of numbers in the left argument) but the right argument doesn't have that many so you get an error.
+
+But the J `+` handles both these cases the way you would like, and would expect!
+```J
+   1 + 2 3 4
+3 4 5
+   2 3 4 + 1
+3 4 5
+```
+Thank goodness the `addlists` and `adda` verbs are in a temporary file and are easy to get rid of, because clearly you don't need them in J. Close and delete that temporary script now.
+
+The simple concept of working with lists, instead of just single things, extends throughout J.
+```J
+   2 4 6 * 7 8 9
+14 32 54
+   2 * 2 3 4
+4 6 8
+   2 3 4 * 2
+4 6 8
+   5 6 7 % 2
+2.5 3 3.5
+   2 3 4 - 3
+_1 0 1
+```
+It works for the comparatives as well.
+```J
+   2 3 4 = 7 3 8
+0 1 0
+   2 < 0 1 2 3 4 5
+0 0 0 1 1 1
+   't' = 'testing'
+1 0 0 1 0 0 0
+```
+If this works for primitives, what about verbs such as `centigrade`?
+
+Run your cf.ijs script to define your verbs and see what happens.
+```J
+   centigrade _40 32 212
+_40 0 100
+```
+You can apply your `centigrade` verb to a list of numbers and get a list of results. This also work for `fahrenheit`.
+```J
+   fahrenheit _40 0 100
+_40 32 212
+```
+What about your dyad convert?
+```J
+   'c' convert _40 32 212
+_40 0 100
+   'f' convert _40 0 32 100 212
+_40 32 89.6 212 413.6
+```
+The extension of verbs to work consistently on lists is very powerful and significantly distinguishes J from most other languages. It is important that you assimilate this into the way you think about solving problems.
+
+# A few more primitives
+The monad `i.` (integers) result is the list of integers from 0 up to its right argument.
+```J
+   i. 2
+0 1
+   i. 4
+0 1 2 3 
+   i. 6
+0 1 2 3 4 5
+```
+The dyad $ is called shape.
+```J
+   5 $ 7	NB. a list of 5 7's
+7 7 7 7 7
+   8 $ 23	NB. a list of 8 23's
+23 23 23 23 23 23 23 23
+```
+The monad `?` (roll) generates a random number in the range 0 up to 1 less than the argument. An argument of 0 gives a random floating point number greater than or egual to 0 and less than 1. The answers vary depending on how the die rolls.
+```J
+   ? 10
+6
+   ? 10
+0
+   ? 10 10 10 10  NB. 4 numbers in range 0 to 9
+3 0 4 6
+   ? 5 $ 100	  NB. 5 numbers in range 0 to 99	
+58 93 84 52 9
+   ? 0 0 0
+0.708477 0.553165 0.00766673
+```
+The dyad `^` (power) result is the left argument multiplied by itself the number of times given by the right argument.
+```J
+   3 ^ 2	NB. 3 * 3
+9
+   2 ^  3	NB. 2 * 2 * 2
+8
+   2 ^ 4	NB. 2 * 2 * 2 * 2
+16
+   2 2 2 2 2 2 ^ 0 1 2 3 4 5
+1 2 4 8 16 32
+   2 ^ 0 1 2 3 4 5
+1 2 4 8 16 32
+   2 ^ i. 6
+1 2 4 8 16 32
+```
+The dyad `o.` (circle) is the letter `o` inflected with a dot, and it provides the circular (trigonometric) functions. In particular, the `o.` verb with a left argument of 1 gives the sine of the right argument.
+```J
+   1 o. i.7   
+0 0.841471 0.909297 0.14112 _0.756802 _0.958924 _0.279415
+```
+It is hard to tell whether this makes sense or not and it would be better to see this data with a plot.
+
+# Plot
+To use the plot facility you need to load it.
+```J
+   load 'plot'
+```
+Try a simple plot.
+```J
+   plot 5 10 23 45 8
+```
+![](_images/plot.gif)
+
+The plot is in a separate window. Close the plot window to get rid of it.
+
+Now that you can plot data, let's take a look at some of the primitives you were using in the previous section.
+```J
+   plot 2 ^ i. 5
+   plot ? 5 $ 100
+   plot ? 50 $ 100
+   plot ? 100 $ 100
+   plot ? 1 + i. 50
+   plot ? 1 + i. 100
+```
+A left argument customizes the plot.
+```J
+   'TITLE myplot;TYPE bar' plot 2 ^ i. 5
+```
+Or try the sine values you calculated earlier.
+```J
+   plot 1 o. i. 16
+```
+There is a family of utilities defined in script trig.ijs you could make use of here. Use load to load that script.
+```J
+   load 'trig'
+   plot sin i. 16
+```
+To produce a finer plot you need to provide more results over a similar range.
+```J
+   plot sin 0.2 * i.60
+   plot cos 0.2 * i.60
+```
+
+# Plot locale
+Plot also illustrates a common technique in the use of locales. Close J and restart it to get a clean slate. The `names` in the base locale is empty and there are just the two standard locales that are populated by the profile.ijs script.
+```J
+   names 3	NB. verbs
+   names 6	NB. locales
+base j    jcfg z
+```
+The load verb (defined in the z locale) loads the plot.ijs script into the `plot` locale.
+```J
+   load 'plot'
+   plot ? 5 $ 100	
+   names 3
+   names 6
+base  j     jcfg  jplot z
+   plot
++----------+
+|plot_plot_|
++----------+
+```
+The verb `plot` is not defined in the base locale, but is defined in the `z` locale. When it is executed in the base locale the definition from the `z` locale is executed as if it were in the base locale. Entering the name `plot` displays its definition. The interesting thing about the definition of `plot` is that it executes the `plot` verb in the `plot` locale. So the `plot` in the `z` locale is a cover that works in all locales and has the result of executing `plot` in the `plot` locale.
+
+This technique of loading a facility like the plot package into its own locale, and then defining cover verbs in the `z` locale so that plain name references invoke the desired verb in the facility locale is common. The definitions in the plot locale can be viewed as the private implementation of the facility and the names that are exposed by being defined in the `z` locale are the public or published interface.
+
+# Print precision
+Print precision is the number of digits shown when a number is displayed.
+```J
+   1 % 3
+0.333333
+   10 % 3
+3.33333
+   100 % 3
+33.3333
+```
+Using lists and some of the new primitives you can now see this more concisely:
+```J
+   (10 ^ i. 6) % 3
+0.333333 3.33333 33.3333 333.333 3333.33 33333.3
+```
+You can guess that the default print precision is 6 because in each case 6 digits are shown.
+```J
+   a =. 1e5 + 10 % 3
+   b =. a + 0.1
+   a
+100003
+   b
+100003
+   a = b
+0
+```
+With only 6 digits shown, `a` and `b` look the same even though they aren't. In a situation like this you need to see more digits. The print precision can be changed by use of the following verb.
+```J
+   pps =. 9!:11	NB. print precision set
+```
+Don't worry about the curious appearance of this verb, just use it.
+```J
+   pps 9
+   a
+100003.333
+   b
+100003.433
+```
+With print precision of 9 there is enough detail to see what is going on.
+```J
+   pps 6
+   %3 9 13
+0.333333 0.111111 0.0769231
+   pps 12
+   %3 9 13
+0.333333333333 0.111111111111 0.0769230769231
+```
+The default print precision of 6 is adequate for most situations because you don't usually have to see all those extra digits of detail. However, it is important to know that they really are there, and that the display has been abbreviated as a matter of convenience.
+
+# Inexact numbers
+The way numbers are stored in a computer limits the maximum number of digits in the number. This maximum depends on the hardware, but typically a `pps` argument of `20` guarantees that all the digits available for a value will be displayed.
+```J
+   pps 6
+   %3
+0.333333
+   pps 12
+   %3
+0.333333333333
+   pps 20
+   %3
+0.33333333333333331
+```
+At `20` digits of precision the result of `%3` displays all the detail it has on the number in `17` digits. The result of `%3` is not the exact mathematical result, but is the closest number to that exact result that can be stored in the computer. This difference between what you would expect from exact math and the limitations on how numbers are stored in computers can be confusing.
+```J
+   3 * % 3
+1
+```
+The result of `%3` is not the exact value, but it is so close that when multiplied by `3` it gives the exact expected value of `1`.
+```J
+   3 * 10 * % 3
+10
+```
+Multiplying the inexact result of `%3` by `10` magnifies the error, but it is still close enough to the exact value that when multiplied by `3` it gives the exact expected value of `10`.
+```J
+   3 * 100 * % 3
+99.999999999999986
+```
+However, multiplying `%3` by `100` magnifies the error enough so that when multiplied by `3` you do not get the exact expected answer of `100`, but instead get a number that is very close to `100`.
+
+Using lists you can combine the above examples.
+```J
+   3 * 1 10 100 * % 3
+1 10 99.999999999999986
+```
+The fact the `%3` isn't stored exactly in the computer may not surprise you too much if you realize that an exact representation in decimal digits would take an infinite numbers of 3's.
+
+There is an additional source of confusion due to the fact that computers store numbers internally in a binary format where each digit is a 0 or 1, rather than the decimal format you are familiar with where the digits range in value from 0 to 9. A consequence of this is that even very simple decimal numbers, exactly expressed with a few digits, when converted to the computer's binary format, are stored as an inexact value.
+```J
+   pps 20
+   0.5 0.25 0.1
+0.5 0.25 0.10000000000000001
+```
+The `0.5` and `0.25` are stored exactly, but the `0.1` is stored inexactly, and when displayed with maximum precision shows as `0.10000000000000001` .
+
+These are facts of life with the way computers store floating point numbers and apply to all computer languages, not just J. Usually you can ignore these details, but they can sometimes cause problems or confusion if you don't have an idea about what is going on.
+
+# Tolerance
+This section is a bit advanced and understanding it is not critical. If it makes sense, great. If not, don't worry about it, and just move on to the next section.
+
+For some kinds of work with floating point numbers, this section is important, along with a more detailed understanding of how numbers are stored and manipulated by the hardware. For most work, however, this section can be ignored.
+
+Let's consider the calculation at the end of the last section in more detail.
+```J
+   pps 20
+   a =. 3 * 100 * % 3
+   a
+99.999999999999986
+   a = 100
+1
+```
+By exact math you would expect `a` to be `100`. But because the computer can't exactly represent the value `%3`, you get a value for a that is very close to `100`, but not exactly, as you can see by its detailed display with a print precision of `20`. However, note that a is considered to be equal to `100`, even though you can see that it is not exactly equal. This is because the comparison is tolerant. That is, numbers do not have to be exactly identical to be considered equal.
+
+Let's experiment to get an idea for how tolerant the comparison is by gradually taking the value further away from 100. The input line recall shortcut with Shift+Ctrl+up arrow is very useful for playing with things like this.
+```J
+   100 = 100
+1
+   100 = 99.999999999999986
+1
+   100 = 99.99999999999998
+1
+   100 = 99.9999999999999
+1
+   100 = 99.999999999999
+1
+   100 = 99.99999999999
+0
+```
+In the last example you crossed the line and the value is far enough away from 100 that it is no longer considered to be equal. Let's look at another example.
+```J
+   a =. 23
+   b =. a - 1e_12
+   c =. a - 1e_11
+   a
+23
+   b
+22.999999999999002
+   c
+22.999999999989999
+   a = b
+1
+   a = c
+0
+```
+The values of `a` and `b` are close enough to be considered equal. The values of `a` and `c` are not close enough to be considered equal. Close enough refers to the difference between the two numbers.
+```J
+   a - b
+9.9831254374294076e_13
+   a - c
+1.000088900582341e_11
+```
+In both cases the difference is small, but `b` is closer than `c` to `a`. Reading the J Dictionary definition for `=` you will see that the dividing line between close enough and not close enough is determined by the result of multiplying the larger of the numbers times the default tolerance value of `2^_44`. That is, close enough is relative to the size of the numbers.
+```J
+   tolerance =. a * 2 ^ _44
+   tolerance
+1.3073986337985843e_12
+```
+Check both differences against this tolerance:
+```J
+   (a - b , c) <: tolerance
+1 0
+```
+The difference between `a` and `b` is less or equal to the tolerance, whereas the difference between `a` and `c` is not.
+
+# Checkpoint D
+At this point you should understand:
+
+  - primitives work with lists
+  - your own verbs work with lists
+  - how to use several new verbs
+  - how to use the plot facility
+  - comparatives such as = that give numeric 0 and 1 results
+
+Check your understanding by doing the following exercises:
+
+  - look up the J Dictionary definitions of the integers, shape, roll, power, and circle verbs; in most cases only a part of their capabilities have been introduced, so you will have to read the definitions carefully to be able to ignore the parts not yet relevant, and to pick out the parts that are
+  - experiment with the new primitives
