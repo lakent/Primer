@@ -1836,3 +1836,554 @@ Check your understanding by doing the following exercises:
 
   - look up the J Dictionary definitions of the integers, shape, roll, power, and circle verbs; in most cases only a part of their capabilities have been introduced, so you will have to read the definitions carefully to be able to ignore the parts not yet relevant, and to pick out the parts that are
   - experiment with the new primitives
+
+# Atom
+A noun that is a single entity is an atom.
+```J
+   23
+   'a'
+   b =. 23
+   a =. 'q'
+```
+An atom has 0 dimensions.
+
+# List
+A noun that is a list of atoms is a list.
+```J
+   23 24 25
+   'this is a string'
+   b =. 7 14 21
+   a =. 'another string'
+```
+A list has one dimension. The length of the dimension is the count of atoms in the dimension.
+
+# Table
+A table is a two dimensional array of atoms. Tables cannot be written directly as a constant as can an atom or a list, but instead must be created with a primitive. The dyad `$` (shape) can create tables. The left argument indicates the count of items in each dimension and the right argument provides items to populate the table.
+```J
+   2 3 $ 7	NB. a 2 by 3 table of 7's
+7 7 7
+7 7 7
+   2 3 $ 7 8 9 10 11 12
+ 7  8  9
+10 11 12
+   2 3 $ 7 8	NB. cycle through atoms to get enough
+7 8 7
+8 7 8
+   3 4 $ 'abcdefghijklmnopqrstuv'
+abcd
+efgh
+ijkl
+```
+The monad `$` (shape of) gives the shape of its argument. The shape is the list of the count of atoms in each dimension of the argument.
+```J
+   a =. 2 3 $ 7
+   $ a
+2 3
+```
+The monad `i.` (integers), introduced earlier for creating a list of integers, can be used to create tables of integers.
+```J
+   i.5		NB. list of 5 integers
+0 1 2 3 4
+   i. 2 3	NB. 2 by 3 table of integers
+0 1 2
+3 4 5
+```
+
+# Array
+Atoms, lists, and tables are all arrays. All nouns in J are arrays. Atoms have 0 dimensions, lists have 1 dimension, and tables have 2 dimensions. This extends to higher dimension arrays.
+
+The primitive `$`, discussed earlier with lists and tables also works with higher dimension arrays.
+```J
+   2 3 4 $ i. 24
+ 0  1  2  3
+ 4  5  6  7
+ 8  9 10 11
+
+12 13 14 15
+16 17 18 19
+20 21 22 23
+```
+The above is a 3-dimensional array. The blank line indicates the break between the 1st dimension and the 2nd and 3rd.
+```J
+   b =. 2 3 4 $ 'abcdef'
+   $ b
+2 3 4
+```
+The monad `i.` also works with higher dimension arrays.
+```J
+   i. 2 3 4
+ 0  1  2  3
+ 4  5  6  7
+ 8  9 10 11
+
+12 13 14 15
+16 17 18 19
+20 21 22 23
+```
+The J terms atom, list, and table are analogous to the math terms of scalar, vector, and matrix.
+
+# Axis
+The term axis is used in slight preference to the term dimension. Atoms have 0 axes, lists have 1 axis, and tables have 2 axes.
+
+# Shape
+The shape of a noun is the list of the count of atoms in each of its axes. The monad `$` gives the shape of a noun.
+```J
+   a =. 4 2 3 $ 'abcdef'
+   $ a
+4 2 3
+   $ 4		NB. atom has 0 axes and its shape is empty
+   $ i. 5
+5
+```
+
+# Rank
+The rank of a noun is the count of its axes. An atom has rank 0, a list rank 1, a table rank 2, and an array with 5 axes has rank 5. The rank of an array is very important and determines in a significant way how verbs act upon it.
+
+The shape of an array is a list with as many numbers as the array has axes. This means that the count of the shape of an array is the rank of the array.
+```J
+   # $ 4	NB. atom has rank 0
+0
+   # $ 4 5 6	NB. list has rank 1
+1
+   # $ 2 3 $ 'a'	NB. table has rank 2
+2
+```
+
+# Empty Array
+An array is empty if it contains no atoms. An empty array has a 0 in its shape.
+```J
+   a =. 0 $ 0	NB. empty list
+   $a
+0
+   $ ''	NB. empty list
+0
+   b =. 2 0 3 $ 'a'	NB. empty rank 3 array
+   $b
+2 0 3
+```
+Empty arrays have no atoms to display and their display can be confusing if you don't know what to expect. An empty list displays as a blank line. A table with 0 rows displays as 0 lines; a table with 3 rows, but 0 columns, displays as 3 blank lines.
+```J
+   2 $ 5
+5 5
+   1 $ 5
+5
+   0 $ 5	NB. empty list displays as blank line
+   2 2 $ 5
+5 5
+5 5
+   1 2 $ 5
+5 5
+   2 0 $ 5	NB. 2 rows displays 2 lines
+
+
+   0 2 $ 5	NB. 0 rows displays 0 lines
+```
+The display of lists and tables with 1 row can look the same, and you have to look at their shape to distinguish them.
+```J
+   a =. 2 $ 5
+   b =. 1 2 $ 5
+   a
+5 5
+   b		NB. b displays the same as a
+5 5
+   $ a
+2
+   $ b		NB. but b has a different shape
+1 2
+```
+
+# Single atom array
+An array with a single atom is referred to as a singleton. All singletons with the same atom display the same way. However, the fact that they have different ranks affects how verbs act on them. This can be a pitfall for beginners. It is important to remember that if it displays like an atom, but does not behave like one, then check its rank.
+```J
+   atom =. 5
+   list =. 1 $ 5
+   atom
+5
+   list	NB. list looks like atom
+5
+   atom + 23 23 23
+28 28 28
+   list + 23 23 23	NB. but does not behave like atom
+|length error
+|   list    +23 23 23
+   # $ atom	NB. rank of atom is 0
+0
+   # $ list	NB. rank of list is 1
+1
+```
+
+# Verb arguments
+Much of the power of J lies in the ability of a verb to treat its arguments as a series of parts. The verb applies itself to each of the parts, creating a series of partial results, and then assembles the partial results into the final result. Exactly how this works and what you can do with it is described in the next several sections.
+
+Let's look at a few examples to get an idea of where you are heading.
+```J
+   m =. i. 2 2
+   m
+0 1
+2 3
+```
+You can add arrays together that have the same rank and shape.
+```J
+   m + 2 2 $ 10 11 12 13
+10 12
+14 16
+```
+You can add a single number to an array.
+```J
+  10 + m
+10 11
+12 13
+```
+What if you wanted to add one number to the first row and a different number to the second row?
+```J
+   10 20 + m
+10 11
+22 23
+```
+But what if you wanted to add those numbers to the columns instead? You have to indicate that you want to add to the columns not the rows.
+```J
+   10 20 +"1 m
+10 21
+12 23
+```
+
+# Frame and cell
+So far nouns have been considered in their entirety. However, it is useful to think of an array as consisting of cells, parts of the array (subarrays) that when placed in a frame, make up the entire array.
+```J
+   a =. 2 3 $ i. 6
+   a
+0 1 2
+3 4 5
+```
+The array a can be thought of as having 6 cells, where each cell is an atom. The frame would be the shape `2 3` that structures the 6 individual cells into the array `a.` Visually (cell is atom and frame of 2 3):
+```J
+	0       cell 0
+	1       cell 1
+	...
+	5       cell 5
+``` 
+The array `a` can also be thought of as having 2 cells, where each cell is a list. The frame would be the shape 2 that structures the cells into the array `a.` Visually (cell is list and frame of 2):
+```J
+	0 1 2   cell 0
+	3 4 5   cell 1
+```
+Finally, the array a can be thought of as having 1 cell, where the cell is a table. The frame would be the shape empty that structures the cells into the array a. Visually (cell is table and frame is empty) :
+```J
+	0 1 2   cell 0
+	2 3 4
+```
+A table with shape 2 3 can be thought of as:
+
+  - a `2 3` frame of cells that are atoms
+  - 
+  - a `2` frame of cells that are lists of shape `3`
+  - 
+  - an empty frame of a cell that is a table of shape `2 3`
+
+Similarly, an array with shape 4 3 2 can be thought of as:
+
+  - a `4 3 2` frame of cells that are atoms
+  - 
+  - a `4 3` frame of cells that are lists of shape `2`
+  - 
+  - a `4` frame of cells that are tables of shape `3 2`
+
+an empty frame of a cell that is a rank 3 array of shape 4 3 2
+
+The frame is a prefix of the shape of the array. It can be the entire shape (a prefix of all), in which case the cells are atoms. It can be empty (a prefix of none) in which case there is a single cell which is the array. Or anything in between.
+
+The cell shape is the array shape with the frame prefix removed. The length of the cell shape is the cell rank.
+
+The cells of an array are the subarrays that, when assembled into the corresponding frame, create the entire array.
+
+# Item
+Arrays are frequently treated as having a frame of length 1. With this frame, the array has cells of rank 1 less than the rank of the array. These cells are the items of the array.
+
+The items of a list are the atoms in the list. The items of a table are the rows in the table. The *items* of a rank 3 array are the tables in the array. An array is the list of its items.
+
+An atom has one item, itself.
+
+The `#` (tally) of a noun is the number of items in the noun.
+```J
+   # 23
+1
+   # 1 $ 5
+1
+   # i. 5
+5
+   # i.2 3
+2
+```
+
+# k-cell
+A cell of rank k is also called a rank-k cell or k-cell. A 0-cell is an atom, a 1-cell is a list, a 2-cell is a table, and so on. If the rank of the cells of a noun is given, then the frame is whatever is left over of the shape of the noun.
+
+Negative numbers are also used, as in _2-cell and _1-cell; the frames of such cells have length indicated by the magnitude of the numbers. You have seen _1-cells before: they are items.
+```J
+  abc =. 4 3 2 $ i. 24
+```
+The noun `abc` can be thought of as:
+
+  - 4 3 2 frame of 0-cells
+
+  - 4 3 frame of 1-cells
+
+  - 4 frame of 2-cells
+
+  - empty frame of a 3-cell
+
+A more general way of phrasing this is:
+
+  - rank 3 frame of 0-cells
+
+  - rank 2 frame of 1-cells
+
+  - rank 1 frame of 2-cells
+
+  - rank 0 frame of a 3-cell
+
+# Verb rank
+A verb has a rank that determines how it applies to its arguments. A monad of rank k applies to the k-cells of its argument. A dyad of left rank kl and right rank kr applies to the kl-cells of its left argument and the kr-cells of its right argument. Verb rank is a powerful tool that controls the way a verb applies to arrays.
+
+The ranks of a primitive verb are given in the J Dictionary definition. For example, look up the definition of `+` . The rank information follows the word in the header. For `+` this is `0 0 0`. The monad rank is `0` which indicates the monad `+` applies to the atoms. The dyad ranks are 0 for the left argument (indicating it applies to the atoms, or 0-cells), and 0 for the right argument (again indicating it applies to the atoms in the right argument).
+
+Let's see how this works when adding two tables.
+```J
+   a =. i. 2 3
+   b =. 6 + a
+   a
+0 1 2
+3 4 5
+   b
+6  7  8
+9 10 11
+   a + b
+ 6  8 10
+12 14 16
+```
+The dyad `+` has left rank 0. This means it applies to the atoms of its left argument. Similarly the right rank is 0 and it applies to the atoms of its right argument. The verb takes an atom from its left argument, an atom from its right argument, and adds them together to create a partial result. It does this for each atom from the left and right argument and creates an appropriate number of partial results, which are then assembled into the result frame to create the final result.
+
+In the example above the verb `+` has a left rank of 0. This means the left argument is treated as a `2 3` frame of atoms. Similarly, a right rank of 0 means that the right argument is treated as a `2 3` frame of atoms.
+
+The frame of the result is determined by the frames of the arguments, and so its frame is also `2 3` and each cell is the result of adding an atom from the left argument with an atom from the right argument.
+
+# Agreement
+For a dyad the left rank of the verb and the rank of the left argument determine the frame of the left argument. Similarly the right rank of the verb and the rank of the right argument determine the frame of the right argument. If the left and right frames are the same, then there are the same number of cells in each argument, and it is simply a matter of taking each cell in turn from the left and right arguments, applying the verb, and putting the result into the frame of the result.
+```J
+   a =. i. 2 3
+   b =. 2 3 $ 7
+   a + b
+ 7  8  9
+10 11 12
+```
+Visually you can see how each atom from the left is used with the corresponding atom from the right.
+```J
+0 1 2   +   7 7 7   gives   7  8  9
+3 4 5       7 7 7          10 11 12
+```
+You have also seen that the following works.
+```J
+   a + 7
+ 7  8  9
+10 11 12
+```
+Visually you can see how each atom from the left is used with the corresponding atom from the right.
+```J
+0 1 2   +   7 ...      gives   7  8  9
+3 4 5       ...               10 11 12
+```
+The `...` indicates that the cell is repeated to provide the required arguments. The `...` to the right and below the 7 indicates it is repeated in 2 axes.
+
+But what about the following?
+```J
+   a + 3 4
+3 4 5
+7 8 9
+```
+Again you can see how the cells of the right argument repeat to provide the required verb arguments.
+```J
+0 1 2   +   3 ...      gives    3 4 5
+3 4 5       4 ...               7 8 9
+```
+But there must be some agreement between the cells in the arguments.
+```J
+   a + 3 4 5
+|length error
+|   a    +3 4 5
+```
+Visually what is happening:
+```J
+0 1 2   +   3 ...      gives    3 4 5
+3 4 5       4 ...               7 8 9
+            5 ...	error - ran out of lefts
+```
+The above cases are simple enough, but consider the following with a rank 3 noun.
+```J
+   b =. i. 2 3 4
+   b + a
+ 0  1  2  3
+ 5  6  7  8
+10 11 12 13
+
+15 16 17 18
+20 21 22 23
+25 26 27 28
+```
+This is more complicated to visualize.
+```J
+ 0  1  2  3   +   0 ...   gives   0  1  2  3
+ 4  5  6  7       1 ...           5  6  7  8
+ 8  9 10 11       2 ...          10 11 12 13
+
+12 13 14 15       3 ...          15 16 17 18
+16 17 18 19       4 ...          20 21 22 23
+20 21 22 23       5 ...          25 26 27 28
+```
+Similarly:
+```J
+   b + 2 3
+ 2  3  4  5
+ 6  7  8  9
+10 11 12 13
+
+15 16 17 18
+19 20 21 22
+23 24 25 26
+```
+Visually:
+```J
+ 0  1  2  3   +   2 ...   gives  2  3  4  5
+ 4  5  6  7       ...            6  7  8  9
+ 8  9 10 11                     10 11 12 13
+
+12 13 14 15       3 ...         15 16 17 18
+16 17 18 19       ...           19 20 21 22
+20 21 22 23                     23 24 25 26
+```
+The agreement rule is quite simple. If the left and right frames are the same then there is no problem. Otherwise, one frame must be a prefix of the other, and its cells are repeated into its trailing axes to provide the required arguments.
+
+# Rank conjunction "
+The primitive `"` (double-quote, not two quotes) is the rank conjunction. Conjunctions haven't been introduced yet and there is more detail in a later section. For now, just think of a conjunction as similar to a dyad verb in that it takes a left and right argument and has a result. The particular use of `"` of interest here is when the left argument is a verb and the right argument is a noun. Yes, conjunctions can take verb arguments, as well as noun, whereas a verb can take only noun arguments.
+
+In the section on names there was an example where you directly defined a name as a verb.
+```J
+   plus =. +
+```
+This style of definition is more direct than the type you used to define `centigrade`. It is called tacit definition and is dealt with in more detail in a later section. The name plus is defined as the primitive `+` and thus has the same rank as `+` of `0 0 0` .
+
+The rank conjunction produces a new verb from its left argument with the rank information from its right argument.
+```J
+   plus000 =. + " 0 0 0
+```
+The right argument for `"` is the rank information for the primitive `+` that is given in the J Dictionary (look up `+` in the vocabulary, turn to the definition page, and note the rank information in the heading). The first 0 is the rank of the monad argument. The second and third 0's are respectively the rank of the dyad left and right arguments.
+
+Since `plus000` is `+` with same ranks as the primitive `+` it should behave just as does `+` or `plus` . You can verify this with a few experiments borrowed from the previous section on agreement.
+```J
+   a =. i. 2 3
+   a plus000 a
+0 2  4
+6 8 10
+   a plus000 1 2 3
+|length error
+|   a   plus000 1 2 3
+```
+The length error occurs because the arguments do not agree as per the previous section. The left frame is `2 3` and the right frame `3`, and `3` is not a prefix of `2 3`; there are extra cells from the left argument without corresponding cells from the right argument.
+
+However, it seems reasonable to want to add the list `1 2 3` to each list in the left argument. You know what you want it to do. Visually:
+```J
+0 1 2   +   1 2 3      gives   1 3 5
+3 4 5       ...                4 6 8
+```
+You want a variation of `+` that adds lists from its left argument to lists from its right. You can do that by changing the arguments to the `"` conjunction to indicate that the dyad left and right ranks are lists.
+```J
+   plus011 =. + " 0 1 1
+   a plus011 1 2 3
+1 3 5
+4 6 8
+   1 2 3 plus011 a
+1 3 5
+4 6 8
+```
+In practice you wouldn't bother to give a name to such a specific application of `+` and you would instead use the expression directly.
+```J
+   1 2 3 +" 0 1 1 a
+1 3 5
+4 6 8
+```
+Since `+` is applied dyadically and both ranks are 1, you can use the shorter form of `+"1` which uses 1 for the rank of all arguments.
+```J
+   1 2 3 +"1 a
+1 3 5
+4 6 8
+```
+In this case, the left frame is empty with a cell shape of `3` and the right frame is `2` with a cell shape of `3`. Empty is a prefix of `2`, and so the frames agree.
+
+There is one thing you have to be aware of.
+```J
+   a +"1 1 2 3
+|length error
+|   a    +"1 1 2 3
+```
+The problem is that J doesn't know that you want the first 1 to be the argument to `"` and the second 1 to be part of the constant `1 2 3`. What happens is that the constant `1 1 2 3` is used as the right argument of `"` and since `"` is defined to allow only arguments of 1 2 or 3 numbers, there is a length error. You need to let J know that the 1 belongs to the " and that the `1 2 3` is a constant.
+```J
+   a (+"1) 1 2 3
+1 3 5
+4 6 8
+   a +"1 (1 2 3)
+1 3 5
+4 6 8
+```
+
+# Result shape
+In the previous sections the question of the shape of the result was glossed over. For a monad the frame of the result is the same as the frame of the argument. For a dyad the frame of the result is the frame of the longer of the frames of the arguments (or either frame if they are the same).
+
+With a verb like + that has an atom result for each atom argument this is straightforward. Things get more interesting with verbs that have more complicated behavior.
+
+Consider the verb `$` . Look it up in the J Dictionary and you'll see it has rank of `_ 1 _` . The `_` indicates an infinite (unbounded) rank and means that the verb applies to the entire argument. The monad has unbounded rank and so applies to the entire right argument. If you think about the monad `$` with a result that is the shape of its entire right argument this makes sense. The dyad left rank is 1 and this means that it applies to lists from the left argument. The dyad right rank is unbounded and so applies to the entire right argument.
+```J
+   2 4 $ i.3
+0 1 2 0
+1 2 0 1
+   2 4 $"1 0 i.3
+0 0 0 0
+0 0 0 0
+
+1 1 1 1
+1 1 1 1
+
+2 2 2 2
+2 2 2 2
+```
+The first example is what you have seen before, but what is going on in the second? The `$"1 0` means that $ will get cell arguments as a list (1-cells) on the left and as an atom (0-cell) on the right. The left frame is empty (nothing is left of the shape of the left argument after a 1-cell is taken) and the right frame is 3 (there are 3 0-cells in the right argument). So the result frame is 3.
+```J
+2 4 $ 0   gives   0 0 0 0   left 1-cell $ right 0-cell 
+                  0 0 0 0
+
+... $ 1   gives   1 1 1 1   repeat 1-cell $ next 0-cell
+                  1 1 1 1
+
+... $ 2   gives   2 2 2 2   repeat 1-cell $ next 0-cell
+                  2 2 2 2
+```
+The frame of the result is `3` and the things in that frame are `2` by `4` tables, so the shape of the final result is `3 2 4`.
+```J
+   $ 2 4 $"1 0 i.3
+3 2 4
+```
+Rank (noun rank, verb rank, frames, cells, and the rank conjunction) applies to all verbs and greatly increases the ways in which you can use any verb.
+
+# Checkpoint E
+At this point you should understand:
+
+  - the terms atom, list, table, array, axis, rank, shape, item, frame, and cell
+  - noun rank
+  - verb rank
+  - `"` (rank conjunction)
+  - agreement
+  - how rank determines which cell arguments a verb applies to
+  - how the result is built up of the partial results
+
+Check your understanding by doing the following exercises:
+
+  - experiment with the primitives you know and use `"` to apply them to cells and see how the partial results build up the final result
+  - don't limit your experiments to verbs like `+`, but also try verbs such as `$` (shape) and `,` (append)
