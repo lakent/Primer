@@ -382,6 +382,7 @@ At this point you should understand:
 
   - how to use the J Dictionary vocabulary
   - terms such as word, sentence, noun, verb, ambivalence, dyad, monad
+
 Check your understanding by doing the following exercises:
   - look up the definition of the monads `+: *: -: %:`
   - experiment with these new monads
